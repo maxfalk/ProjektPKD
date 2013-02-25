@@ -1,0 +1,82 @@
+Projekt arebete.
+
+todo:
+
+1.Ett fungerande ML-program som utför den uppgift som ni fått godkänd av handledaren. 
+	Programmet skall följa kursens kodningsstandard. 
+		Programmering med sidoeffekter får inte ske annat än om det är nödvändigt t.ex. i samband med in/utmatning.
+2.Automatiserade testfall för programkoden utformade enligt de riktlinjer som vi lämnat på kursen.
+3.Dokumentation av programmet. Se nedan för mera information om hur dokumentationen skall vara utformad.
+4.Projektdagböcker för varje deltagare. I sin projektdagbok skall var och en av er notera varje tillfälle hen arbetat med projektet: när, hur länge och med vad.
+
+3.Dokumentation.
+	Beskriver hur ert program fungerar och hur man skall använda det.
+
+	1.Titel, namn på projektdeltagare, uppgift om att detta är projektet på denna kurs detta år, innehållsförteckning, inledning med sammanfattning av vad programmet gör.
+	2.En "användarbeskrivning": en anvisning för hur man praktiskt använder ert program, inklusive körexempel.
+	3.En "programdokumentation": en beskrivning av hur ert program egentligen fungerar:
+	4.Beskrivning av datastrukturer. För abstrakta datatyper skall ni dessutom ange hur gränssnittet ser ut.
+	5.Beskrivning av algoritmerna som ert program använder.
+	6.Beskrivning av de olika delfunktionerna hos programmet. Beskriv algoritmer och ge funktionsspecifikationer för de viktigaste delfunktionerna. Tala om hur programflödet ser ut (alltså hur funktionerna anropar varandra).
+	7.Beskrivning av kända brister hos programmet. Det kan vara sådant som fungerar men ni själva tycker är mindre lyckat gjort eller saker som ni trots tappra försök inte lyckats få till ordentligt.
+
+4. Projektdagbok
+	I sin projektdagbok skall var och en av er notera varje tillfälle hen arbetat med projektet: när, hur länge och med vad.
+	
+	
+1.Programmering/kommentering
+
+	Programmet, SOLITÄR.
+	1.Skapa en plan, med 3 fall för "plats upptagen", "plats ledig" och "plats omöjlig(utanför planen)".
+		datastruktur för det, möjligtvis 2-dim array? med 3 olika fall enligt ovan
+	2.Initiera en ny plan med mitten tom
+		Hitta den mittersta "platsen" göra den tom.
+		Alla andra platser blir upptagen(dvs finns en kula där)
+	3.Kunna flytta en pjäs.
+		Ange vad man vill flytta vad, tex. Move(CoordOfPieceToMove,MoveTo)
+		
+		Tabort den man flyttar, sätter in en där man landar. Tabort alla imellan
+		Regler för att flytta pjäsen.
+			Kan bara hoppa över en pjäs/måste hoppa över en pjäs.
+			Måste landa i en tom plats
+			Kan bara hoppa vertikalt och horenzontellt.
+			Kan bara flytta sig 2 steg(dvs hoppa över en pjäs).
+			Pjäsen men hoppar över blir tom.
+			Pjäsen man hoppar med är kvar.
+			Inte komma utanför planen.
+			
+	4.Ångra ett drag 
+		Spara det sista draget.
+		Återställ till det förra stadiet.
+		UndoMove();
+	Vinna
+		Hela planen består av bara tomma platser.
+		Kolla om man vunnit efter varje drag?
+	Förlora
+		Kolla det eller lämna det till användaren?
+		
+		
+	PlusedoKod
+		datatype PlaceState = Occupied | Free | Unavalible
+		datatype Plan = plan of  PlaceState array array
+		function NewGame
+			skapa Plan;
+			Loopa igenom array(planen) = ge alla platser Occupied -> hitta mitten = Free;
+			return planen.
+		Bind planen till ett värde för att användas i andra funktioner.
+		
+		
+	
+	
+		
+		
+		
+Ledigt tid:
+Vecka 9.
+Måndag 08:00 - 15:15.
+Tisdag 08:00 - 17:00.
+Onsdag 08:00 - 10:15, 15:00 - 17:00.
+Torsdag 10:00 - 17:00.
+Fredag 08:00 - 10:00, 13:15 - 17:00.
+	
+

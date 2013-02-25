@@ -1,0 +1,17 @@
+(*
+Statusar för olika delar av planen.
+Om det är upptaget, ledigt eller utanför planen.
+*)
+datatype delplan = Exists | void | outofbounds
+(*
+Vilken riktning som man vill flytta en kula
+*)
+datatype direction = North | East | West | South
+
+(*Move((x,y),MoveTO)
+TYPE: (int * int) * direction -> unit
+PRE:none
+SIDE-EFFECT: Flyttar en kula i spel planen.
+
+*)
+
