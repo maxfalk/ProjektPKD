@@ -8,8 +8,15 @@ sig
 	val move : Field * int * int * Direction -> Field
 	val getDirection : string -> Direction
 	val gameWon : Field  -> bool
-	val getOldMoves : unit -> (int*int*Direction) list
 	val undo : Field -> Field
+	(*
+	en sub funktion
+	EN jag har förlorat funktion 
+	highscore lista 
+	Tids funktion
+	Poäng system
+	*)
+	
 end
 
 structure S :> S =
@@ -19,7 +26,6 @@ struct
 	datatype Direction = WEST | EAST | SOUTH | NORTH
 	
 	val oldMoves : (int * int * Direction) list ref = ref []
-	fun getOldMoves() = !oldMoves
 	(*-------------------------------------------------------------------------------------------------------------*)
 	(*getDirection(direct)
 	TYPE: string -> Direction
