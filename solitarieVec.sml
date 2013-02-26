@@ -9,7 +9,7 @@ sig
 	val getDirection : string -> Direction
 	val gameWon : Field  -> bool
 	val getOldMoves : unit -> (int*int*Direction) list
-
+	val undo : Field -> Field
 end
 
 structure S :> S =
@@ -140,49 +140,16 @@ struct
 	EXAMPLE:
 
 	*)
-	fun movedirection(cField,x,y,WEST) = 
-			let
-				val PeiceMovedTo = CheckForPiece(cField,x-2,y,VOID)	
-				val OOB = outOfBounds(cField,x-2,y)
-			in
-				if PeiceMovedTo andalso OOB  then
-					(
-					saveInverseMove(x,y,WEST);
-					updateVector(updateVector(updateVector(cField,x,y,VOID),x-2,y,EXISTS),x-1,y,VOID)
-					)
-				else
-					cField
-			end
-		| movedirection(cField,x,y,EAST) = 
-			let
-				val PeiceMovedTo = CheckForPiece(cField,x+2,y,VOID)	
-				val OOB = outOfBounds(cField,x+2,y)
-			in
-				if PeiceMovedTo andalso OOB  then
-					updateVector(updateVector(updateVector(cField,x,y,VOID),x+2,y,EXISTS),x+1,y,VOID)
-				else
-					cField
-			end
-		| movedirection(cField,x,y,SOUTH) = 
-			let
-				val PeiceMovedTo = CheckForPiece(cField,x,y-2,VOID)
-				val OOB = outOfBounds(cField,x,y-2)
-			in	
-				if PeiceMovedTo andalso OOB  then
-					updateVector(updateVector(updateVector(cField,x,y,VOID),x,y-2,EXISTS),x,y-1,VOID)
-				else
-					cField
-			end
-		| movedirection(cField,x,y,NORTH) = 
-			let
-				val PeiceMovedTo = CheckForPiece(cField,x,y+2,VOID)	
-				val OOB = outOfBounds(cField,x,y+2)
-			in
-				if PeiceMovedTo andalso OOB then
-					updateVector(updateVector(updateVector(cField,x,y,VOID),x,y+2,EXISTS),x,y+1,VOID)
-				else
-					cField
-			end	
+	fun movedirection(cField,x,y,WEST,FromValue,OverValue,Value) = (updateVector(updateVector(updateVector(cField,x,y,FromValue),x-2,y,Value),x-1,y,OverValue))
+		| movedirection(cField,x,y,EAST,FromValue,OverValue,Value) = (updateVector(updateVector(updateVector(cField,x,y,FromValue),x+2,y,Value),x+1,y,OverValue))
+		| movedirection(cField,x,y,SOUTH,FromValue,OverValue,Value) = (updateVector(updateVector(updateVector(cField,x,y,FromValue),x,y-2,Value),x,y-1,OverValue))
+		| movedirection(cField,x,y,NORTH,FromValue,OverValue,Value) = (updateVector(updateVector(updateVector(cField,x,y,FromValue),x,y+2,Value),x,y+1,OverValue))
+	
+	(*-------------------------------------------------------------------------------------------------------------*)
+	fun rules(cField,x,y,NORTH) = CheckForPiece(cField,x,y+2,VOID) andalso CheckForPiece(cField,x,y+1,EXISTS)
+		| rules(cField,x,y,SOUTH) = CheckForPiece(cField,x,y-2,VOID) andalso CheckForPiece(cField,x,y+1,EXISTS)
+		| rules(cField,x,y,EAST) =  CheckForPiece(cField,x+2,y,VOID) andalso CheckForPiece(cField,x+1,y,EXISTS)
+		| rules(cField,x,y,WEST) = CheckForPiece(cField,x-2,y,VOID) andalso CheckForPiece(cField,x-1,y,EXISTS) 
 	(*-------------------------------------------------------------------------------------------------------------*)
 	(*move(cField,x,y,direc)
 	TYPE: Field * int * int * Direction -> Field
@@ -195,9 +162,11 @@ struct
 		let
 			val OOB = outOfBounds(cField,x,y)
 			val PeiceToMove = CheckForPiece(cField,x,y,EXISTS)	
+			val rulespassed = rules(cField,x,y,direc) 
 		in
-			if PeiceToMove andalso OOB then
-				movedirection(cField,x,y,direc)
+			if PeiceToMove andalso OOB andalso rulespassed then
+				(saveInverseMove(x,y,direc);
+				movedirection(cField,x,y,direc,VOID,VOID,EXISTS))
 			else
 				cField
 		end
@@ -237,8 +206,18 @@ struct
 		in
 			gameWon'(cField,y,0)
 		end
-
-		
+	(*-------------------------------------------------------------------------------------------------------------*)
+	fun undo(cField) = 
+		if length( !oldMoves) <> 0 then
+			let
+				val (x,y,direct) = hd( !oldMoves)
+				val _ = print(Int.toString(x)^", "^Int.toString(y)^"\n")
+			in
+				(oldMoves := tl( !oldMoves);				
+				movedirection(cField,x,y,direct,VOID,EXISTS,EXISTS))
+			end
+		else
+			cField
 	
 
 (*-------------------------------------------------------------------------------------------------------------*)
