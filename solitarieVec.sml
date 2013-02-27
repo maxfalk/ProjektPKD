@@ -1,3 +1,4 @@
+
 signature S =
 sig
 	datatype Fieldstate = EXISTS | VOID | OUT 
@@ -6,18 +7,19 @@ sig
 	
 	val createNewField : int * int -> Field
 	val move : Field * int * int * Direction -> Field
-	val getDirection : string -> Direction
 	val gameWon : Field  -> bool
 	val undo : Field -> Field
 	val sub : Field * int * int-> Fieldstate
 	(*
-	EN jag har förlorat funktion 
+	EN jag har förlorat funktion. Alexanders AI kan räkna ut det?
 	highscore lista 
 	Tids funktion
 	Poäng system
 	*)
 	
 end
+
+
 
 structure S :> S =
 struct
@@ -34,51 +36,45 @@ struct
 	datatype Field = field of Fieldstate vector vector 
 	(* 
 	REPRESENTAION CONVENTION: WEST, EAST, SOUTH OCH NORTH representerar riktningar enligt EAST = höger(Positivt i x-led), WEST = vänster (negativt i x-led), 
-								NORTH = upp(positivt i y-led) och SOUTH = ner(negativt i y-led).
+							  NORTH = upp(positivt i y-led) och SOUTH = ner(negativt i y-led).
 	REPRESENTAION INVARIANT: 
 	*)
 	datatype Direction = WEST | EAST | SOUTH | NORTH
-	
+	(* oldMoves
+	   TYPE:  (int * int * Direction) list ref
+	   VALUE: Här sparas en lista med inversen till alla drag som görs när man spelar.
+	*)
 	val oldMoves : (int * int * Direction) list ref = ref []
 	(*-------------------------------------------------------------------------------------------------------------*)
 	(*sub(cField,x,y)
 	TYPE: Field * int * int -> Fieldstate
 	PRE: 0 <= x < längden av cField i x-led, 0 <= y < längden av cFeild i y-led
-	POST:
+	POST: Värdet av elementet i cField med posistion (x,y), y är platen i första vektorn och x i den andra.
 	EXAMPLE:
 	*)
 	fun sub(field(plan),x,y) = Vector.sub(Vector.sub(plan,y),x)
 	
 	(*-------------------------------------------------------------------------------------------------------------*)
-	(*getDirection(direct)
-	TYPE: string -> Direction
-	PRE:
-	POST:
+	(*update(vec,x,value)
+	TYPE: 'a vector * int * 'a -> 'a vector
+	PRE: 0 < = x < length(vec)
+	POST: vec uppdaterat med value på position x
 	EXAMPLE:
-
 	*)
-	fun getDirection(direct) =
-		case direct of
-			"EAST" => EAST
-			| "WEST" => WEST
-			| "SOUTH" => SOUTH
-			| "NORTH" => NORTH
-	(*-------------------------------------------------------------------------------------------------------------*)
+	fun update(vec,x,value) = Vector.tabulate(Vector.length(vec), (fn y => if y = x then value else Vector.sub(vec,y)) )
 	(*updateVector(vec,x,y,value)
 	TYPE: Field * int * int * 'a -> Field
-	PRE:
-	POST:
+	PRE: 0 < = y < length(vec), 0 < = x < length(length(vec)), 
+	POST: vec uppdaterat på element (x,y) (kolumn,rad) med value.
 	EXAMPLE:
-
 	*)
-	fun updateVector(field(vec),x,y,value) = field(Vector.update(vec,y,Vector.update(Vector.sub(vec,y),x,value)))
+	fun updateVector(field(vec),x,y,value) = field(update(vec,y,update(Vector.sub(vec,y),x,value)))
 	(*-------------------------------------------------------------------------------------------------------------*)	
 	(*createNewField(xLength,yLength)
 	TYPE: int * int -> Field
-	PRE:
-	POST:
+	PRE: 0 < xLength,yLength < Vector.maxLen
+	POST: Ett Field med storleken xLength x yLength. Med Void i det mittersta elementet och EXISTS i de andra. 
 	EXAMPLE:
-
 	*)
 	fun createNewField(xLength,yLength) = 
 		let
@@ -89,15 +85,17 @@ struct
 	(*-------------------------------------------------------------------------------------------------------------*)
 	(*fieldLength(plan)
 	TYPE: Field -> (int * int)
-	PRE:
-	POST:
+	PRE: none.
+	POST: Ger tillbaka längden på plan i x och y-led.
 	EXAMPLE:
-
 	*)
 	fun fieldLength(field(plan)) =
 		let
-			val yLength = Vector.length(plan)-1
-			val xLength = Vector.length(Vector.sub(plan,0))-1
+			val yLength = Vector.length(plan)
+			val xLength = if yLength > 0 then
+							Vector.length(Vector.sub(plan,0))
+						  else
+							0
 		in
 			(yLength,xLength)
 		
@@ -105,16 +103,15 @@ struct
 	(*-------------------------------------------------------------------------------------------------------------*)
 	(* outOfBounds(plan,x,y)
 	TYPE: Field * int * int -> bool
-	PRE:
-	POST:
+	PRE:none
+	POST: Ger true om x och y är innanför plann annars false.
 	EXAMPLE:
-
 	*)
 	fun outOfBounds(field(plan),x,y) = 
 		let
 			val (xLimit,yLimit) = fieldLength(field(plan))	
 		in
-			if x < 0 orelse x > xLimit orelse y < 0 orelse y > yLimit then
+			if x < 0 orelse x >= xLimit orelse y < 0 orelse y >= yLimit then
 				false
 			else 
 				true
@@ -122,10 +119,9 @@ struct
 	(*-------------------------------------------------------------------------------------------------------------*)
 	(*CheckForPiece(cField,x,y,value)
 	TYPE: Field * int * int * Fieldstate -> Field
-	PRE:
-	POST:
+	PRE:none.
+	POST: true om element (x,y) i plan har värdet value och x,y är innom planen. Annars false.
 	EXAMPLE:
-
 	*)
 	fun CheckForPiece(cField,x,y,value) = 
 		let
@@ -138,11 +134,10 @@ struct
 		end
 	(*-------------------------------------------------------------------------------------------------------------*)
 	(*saveInverseMove(x,y,direct)
-	TYPE: 'a list * int * int * Direction -> unit
-	PRE:
-	SIDE-EFFECT:
+	TYPE: int * int * Direction -> unit
+	PRE: none.
+	SIDE-EFFECT: Sparar inversen till x,y och direct i variablen oldMoves.
 	EXAMPLE:
-
 	*)
 	fun saveInverseMove(x,y,direct) =
 		let
@@ -164,10 +159,12 @@ struct
 	(*-------------------------------------------------------------------------------------------------------------*)
 	(*movedirection(cField,x,y,direct)
 	TYPE: Field * int * int * Direction -> Field
-	PRE:
-	POST:
+	PRE: direct = WEST, så måste x-2,y befinna sig inom cField.
+		 direct = EAST, så måste x+2,y befinna sig inom cField.
+		 direct = SOUTH, så måste x,y-2 befinna sig inom cField.
+		 direct = NORTH, så måste x,y+2 befinna sig inom cField.
+	POST: cField uppdaterade med FromValue på platsen x,y, med Value på sin destinations plats och OverValue på platsen som hoppas över i processen.
 	EXAMPLE:
-
 	*)
 	fun movedirection(cField,x,y,WEST,FromValue,OverValue,Value) = (updateVector(updateVector(updateVector(cField,x,y,FromValue),x-2,y,Value),x-1,y,OverValue))
 		| movedirection(cField,x,y,EAST,FromValue,OverValue,Value) = (updateVector(updateVector(updateVector(cField,x,y,FromValue),x+2,y,Value),x+1,y,OverValue))
@@ -176,9 +173,9 @@ struct
 	
 	(*-------------------------------------------------------------------------------------------------------------*)
 	(*rules(cField,x,y,direct)
-	TYPE: Field * int * int * Fieldstate -> bool
-	PRE:
-	POST:
+	TYPE: Field * int * int * Direction -> bool
+	PRE: none.
+	POST:  true när en plats (x,y) berhåller ett speciellt värde annars false.
 	EXAMPLE:
 	*)
 	fun rules(cField,x,y,NORTH) = CheckForPiece(cField,x,y+2,VOID) andalso CheckForPiece(cField,x,y+1,EXISTS)
@@ -188,10 +185,10 @@ struct
 	(*-------------------------------------------------------------------------------------------------------------*)
 	(*move(cField,x,y,direc)
 	TYPE: Field * int * int * Direction -> Field
-	PRE:
-	POST:
+	PRE: none.
+	POST: Vid ett giltigt drag: cField uppdaterat enligt draget (x,y) i riktingen direkt. Enligt regler för att röra pjäser i Solitarie.
+		 Vid ett oglitigt drag blir cField oförändrad.
 	EXAMPLE:
-
 	*)
 	fun move(cField,x,y,direc) =
 		let
@@ -208,11 +205,11 @@ struct
 	(*-------------------------------------------------------------------------------------------------------------*)
 	(*gameWon'(cField,y,totalFound)
 	TYPE: Field * int * int -> bool
-	PRE:
-	POST:
+	PRE: 0 <= y < längden på cField i y-led.
+	POST: Ger true om det bara finns en pjäs på planen cField, annars false.
 	EXAMPLE:
-
 	*)
+	(*VARIANT: y*)
 	fun gameWon'(_,0,_) = true 
 		| gameWon'(cField as field(plan),y,totalFound) = 
 		let
@@ -221,7 +218,7 @@ struct
 			val totalFound = totalFound + amountFound
 		
 		in
-			if totalFound > 1 then
+			if totalFound = 1 then
 				false
 			else
 				gameWon'(cField,y-1,totalFound)			
@@ -230,10 +227,9 @@ struct
 	(*-------------------------------------------------------------------------------------------------------------*)
 	(*gameWon(cField,y,totalFound)
 	TYPE: Field -> bool
-	PRE:
-	POST:
+	PRE: none.
+	POST: Ger true om det bara finns en pjäs på planen cField, annars false.
 	EXAMPLE:
-
 	*)
 	fun gameWon(cField) = 
 		let
@@ -243,17 +239,16 @@ struct
 		end
 	(*-------------------------------------------------------------------------------------------------------------*)
 	(*undo(cField)
-	TYPE:
-	PRE:
-	POST:
+	TYPE: Field -> Field
+	PRE: oldMoves måste finnas med typen (int * int * Direction) list ref.
+	POST: Ett nytt Field med det senaste draget som var gjort borta. dvs ett nytt Field som det såg ut innan det senaste draget gjordes.
+	SIDEFFECT: huvudet på (första elementet) oldMoves tas bort om length( !oldMoves) <> 0.
 	EXAMPLE:
 	*)
-	
 	fun undo(cField) = 
 		if length( !oldMoves) <> 0 then
 			let
 				val (x,y,direct) = hd( !oldMoves)
-				val _ = print(Int.toString(x)^", "^Int.toString(y)^"\n")
 			in
 				(oldMoves := tl( !oldMoves);				
 				movedirection(cField,x,y,direct,VOID,EXISTS,EXISTS))
@@ -262,8 +257,10 @@ struct
 			cField
 	
 
+	
 (*-------------------------------------------------------------------------------------------------------------*)
-end
+end;
+
 
 		
 				
