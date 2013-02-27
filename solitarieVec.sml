@@ -9,8 +9,8 @@ sig
 	val getDirection : string -> Direction
 	val gameWon : Field  -> bool
 	val undo : Field -> Field
+	val sub : Field * int * int-> Fieldstate
 	(*
-	en sub funktion
 	EN jag har förlorat funktion 
 	highscore lista 
 	Tids funktion
@@ -21,11 +21,34 @@ end
 
 structure S :> S =
 struct
+	(* 
+	REPRESENTAION CONVENTION: EXISTS, VOID och OUT representerar 3 lägen på positioner på ett seplbräde.
+							  EXISTS representerar när det finns något på den positionen, VOID när det inte finns något och OUT när den platen inte ingår i spelplanen.
+	REPRESENTAION INVARIANT: 
+	*)
 	datatype Fieldstate = EXISTS | VOID | OUT 
+	(* 
+	REPRESENTAION CONVENTION:field representerar en 2-dimensionell plan där varje postition i planen representeras av ett Fieldstate. 
+	REPRESENTAION INVARIANT: 
+	*)
 	datatype Field = field of Fieldstate vector vector 
+	(* 
+	REPRESENTAION CONVENTION: WEST, EAST, SOUTH OCH NORTH representerar riktningar enligt EAST = höger(Positivt i x-led), WEST = vänster (negativt i x-led), 
+								NORTH = upp(positivt i y-led) och SOUTH = ner(negativt i y-led).
+	REPRESENTAION INVARIANT: 
+	*)
 	datatype Direction = WEST | EAST | SOUTH | NORTH
 	
 	val oldMoves : (int * int * Direction) list ref = ref []
+	(*-------------------------------------------------------------------------------------------------------------*)
+	(*sub(cField,x,y)
+	TYPE: Field * int * int -> Fieldstate
+	PRE: 0 <= x < längden av cField i x-led, 0 <= y < längden av cFeild i y-led
+	POST:
+	EXAMPLE:
+	*)
+	fun sub(field(plan),x,y) = Vector.sub(Vector.sub(plan,y),x)
+	
 	(*-------------------------------------------------------------------------------------------------------------*)
 	(*getDirection(direct)
 	TYPE: string -> Direction
@@ -104,11 +127,11 @@ struct
 	EXAMPLE:
 
 	*)
-	fun CheckForPiece(cField as field(plan),x,y,value) = 
+	fun CheckForPiece(cField,x,y,value) = 
 		let
 			val OOB = outOfBounds(cField,x,y)	
 		in
-			if OOB andalso Vector.sub(Vector.sub(plan,y),x) = value then 
+			if OOB andalso sub(cField,x,y) = value then 
 				true 
 			else 
 				false
@@ -152,6 +175,12 @@ struct
 		| movedirection(cField,x,y,NORTH,FromValue,OverValue,Value) = (updateVector(updateVector(updateVector(cField,x,y,FromValue),x,y+2,Value),x,y+1,OverValue))
 	
 	(*-------------------------------------------------------------------------------------------------------------*)
+	(*rules(cField,x,y,direct)
+	TYPE: Field * int * int * Fieldstate -> bool
+	PRE:
+	POST:
+	EXAMPLE:
+	*)
 	fun rules(cField,x,y,NORTH) = CheckForPiece(cField,x,y+2,VOID) andalso CheckForPiece(cField,x,y+1,EXISTS)
 		| rules(cField,x,y,SOUTH) = CheckForPiece(cField,x,y-2,VOID) andalso CheckForPiece(cField,x,y+1,EXISTS)
 		| rules(cField,x,y,EAST) =  CheckForPiece(cField,x+2,y,VOID) andalso CheckForPiece(cField,x+1,y,EXISTS)
@@ -213,6 +242,13 @@ struct
 			gameWon'(cField,y,0)
 		end
 	(*-------------------------------------------------------------------------------------------------------------*)
+	(*undo(cField)
+	TYPE:
+	PRE:
+	POST:
+	EXAMPLE:
+	*)
+	
 	fun undo(cField) = 
 		if length( !oldMoves) <> 0 then
 			let
