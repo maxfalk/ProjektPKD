@@ -21,6 +21,7 @@ sig
 	
 end
 
+
 structure S :> S =
 struct
 	(* 
@@ -63,7 +64,7 @@ struct
 	*)
 	fun update(vec,x,value) = Vector.tabulate(Vector.length(vec), (fn y => if y = x then value else Vector.sub(vec,y)) )
 	(*updateVector(vec,x,y,value)
-	TYPE: Field * int * int * 'a -> Field
+	TYPE: Field * int * int * Fieldstate -> Field
 	PRE: 0 < = y < length(vec), 0 < = x < length(length(vec)), 
 	POST: vec uppdaterat på element (x,y) (kolumn,rad) med value.
 	EXAMPLE:
@@ -158,7 +159,7 @@ struct
 		end
 	(*-------------------------------------------------------------------------------------------------------------*)
 	(*movedirection(cField,x,y,direct)
-	TYPE: Field * int * int * Direction -> Field
+	TYPE: Field * int * int * Direction * Fieldstate * Fieldstate * Fieldstate -> Field
 	PRE: direct = WEST, så måste x-2,y befinna sig inom cField.
 		 direct = EAST, så måste x+2,y befinna sig inom cField.
 		 direct = SOUTH, så måste x,y-2 befinna sig inom cField.
@@ -205,8 +206,8 @@ struct
 	(*-------------------------------------------------------------------------------------------------------------*)
 	(*gameWon'(cField,y,totalFound)
 	TYPE: Field * int * int -> bool
-	PRE: 0 <= y < längden på cField i y-led.
-	POST: Ger true om det bara finns en pjäs på planen cField, annars false.
+	PRE: 0 <= y <= längden på cField i y-led.
+	POST: Ger true om totalFound > 1, annars false.
 	EXAMPLE:
 	*)
 	(*VARIANT: y*)
@@ -214,11 +215,11 @@ struct
 		| gameWon'(cField as field(plan),y,totalFound) = 
 		let
 			val subPlan = Vector.sub(plan,y-1)
-			val amountFound = Vector.foldr (fn (x,y) => if x = EXISTS then y+1 else y) 0 subPlan
+			val amountFound = Vector.foldl (fn (x,y) => if x = EXISTS then y+1 else y) 0 subPlan
 			val totalFound = totalFound + amountFound
 		
 		in
-			if totalFound = 1 then
+			if totalFound > 1 then
 				false
 			else
 				gameWon'(cField,y-1,totalFound)			
