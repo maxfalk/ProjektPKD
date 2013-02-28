@@ -10,6 +10,8 @@ sig
 	val gameWon : Field  -> bool
 	val undo : Field -> Field
 	val sub : Field * int * int-> Fieldstate
+	val checkForPiece : Field * int * int * Fieldstate -> bool 
+	val fieldLength : Field -> (int * int)
 	(*
 	EN jag har förlorat funktion. Alexanders AI kan räkna ut det?
 	highscore lista 
@@ -18,8 +20,6 @@ sig
 	*)
 	
 end
-
-
 
 structure S :> S =
 struct
@@ -117,13 +117,13 @@ struct
 				true
 		end	
 	(*-------------------------------------------------------------------------------------------------------------*)
-	(*CheckForPiece(cField,x,y,value)
-	TYPE: Field * int * int * Fieldstate -> Field
+	(*checkForPiece(cField,x,y,value)
+	TYPE: Field * int * int * Fieldstate -> bool
 	PRE:none.
 	POST: true om element (x,y) i plan har värdet value och x,y är innom planen. Annars false.
 	EXAMPLE:
 	*)
-	fun CheckForPiece(cField,x,y,value) = 
+	fun checkForPiece(cField,x,y,value) = 
 		let
 			val OOB = outOfBounds(cField,x,y)	
 		in
@@ -178,10 +178,10 @@ struct
 	POST:  true när en plats (x,y) berhåller ett speciellt värde annars false.
 	EXAMPLE:
 	*)
-	fun rules(cField,x,y,NORTH) = CheckForPiece(cField,x,y+2,VOID) andalso CheckForPiece(cField,x,y+1,EXISTS)
-		| rules(cField,x,y,SOUTH) = CheckForPiece(cField,x,y-2,VOID) andalso CheckForPiece(cField,x,y+1,EXISTS)
-		| rules(cField,x,y,EAST) =  CheckForPiece(cField,x+2,y,VOID) andalso CheckForPiece(cField,x+1,y,EXISTS)
-		| rules(cField,x,y,WEST) = CheckForPiece(cField,x-2,y,VOID) andalso CheckForPiece(cField,x-1,y,EXISTS) 
+	fun rules(cField,x,y,NORTH) = checkForPiece(cField,x,y+2,VOID) andalso checkForPiece(cField,x,y+1,EXISTS)
+		| rules(cField,x,y,SOUTH) = checkForPiece(cField,x,y-2,VOID) andalso checkForPiece(cField,x,y+1,EXISTS)
+		| rules(cField,x,y,EAST) =  checkForPiece(cField,x+2,y,VOID) andalso checkForPiece(cField,x+1,y,EXISTS)
+		| rules(cField,x,y,WEST) = checkForPiece(cField,x-2,y,VOID) andalso checkForPiece(cField,x-1,y,EXISTS) 
 	(*-------------------------------------------------------------------------------------------------------------*)
 	(*move(cField,x,y,direc)
 	TYPE: Field * int * int * Direction -> Field
@@ -193,7 +193,7 @@ struct
 	fun move(cField,x,y,direc) =
 		let
 			val OOB = outOfBounds(cField,x,y)
-			val PeiceToMove = CheckForPiece(cField,x,y,EXISTS)	
+			val PeiceToMove = checkForPiece(cField,x,y,EXISTS)	
 			val rulespassed = rules(cField,x,y,direc) 
 		in
 			if PeiceToMove andalso OOB andalso rulespassed then
