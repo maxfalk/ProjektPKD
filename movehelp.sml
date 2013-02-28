@@ -35,7 +35,7 @@ use "solitarieVec.sml";
    POST: SOME(The first non-losing move), NONE if no non-losing move was found.
    EXAMPLE:
 *)
-fun bestMove(board) = 
+fun bestMove (board) = 
     let
         (* getMoves(b)
            TYPE: Field -> (Field * int * int * Direction) list
@@ -43,38 +43,73 @@ fun bestMove(board) =
            POST: A list of all possible moves at the game board b's current state.
            EXAMPLE:
         *)
-        fun getMoves(board) = 
-			let
-				fun checkCross(board,x,y) = 
-					let
-						val right = CheckForPiece(board,x+1,y,EXISTS) andalso CheckForPiece(board,x+2,y,EXISTS)
-						val left = CheckForPiece(board,x-1,y,EXISTS) andalso CheckForPiece(board,x-2,y,EXISTS)
-						val down = CheckForPiece(board,x,y-1,EXISTS) andalso CheckForPiece(board,x,y-2,EXISTS)
-						val up = CheckForPiece(board,x,y+1,EXISTS) andalso CheckForPiece(board,x,y+2,EXISTS)
-					in
-					
-					end
-				val (xLength,yLength) = fieldLength(board)
-			in
-				getMoves'(xLength,yLength)
-			
-			end;
+        fun getMoves (board) = 
+	    let
+                val (xLength,yLength) = S.fieldLength(board)
 
-        (* doMove(b,x,y,dir)
-           TYPE: Field * int * int * Direction -> Field
-           PRE: 
-           POST: The game board b's state after the given move is made.
-           EXAMPLE:
-        *)
-        fun doMove(board,x,y,dir) = board;
+                (* checkCross(b,x,y)
+                   TYPE: int * int -> (Field * int * int * Direction) list
+                   PRE:     
+                   POST: A list of all possible moves from (x,y) at the game board b's current state.
+                   EXAMPLE:
+                 *)
+		fun checkCross (x,y) = 
+		    let
+			val east = S.checkForPiece(board,x+1,y,S.EXISTS) andalso S.checkForPiece(board,x+2,y,S.EXISTS)
+			val west = S.checkForPiece(board,x-1,y,S.EXISTS) andalso S.checkForPiece(board,x-2,y,S.EXISTS)
+			val south = S.checkForPiece(board,x,y-1,S.EXISTS) andalso S.checkForPiece(board,x,y-2,S.EXISTS)
+			val north = S.checkForPiece(board,x,y+1,S.EXISTS) andalso S.checkForPiece(board,x,y+2,S.EXISTS)
+                    in
+                        (if(east) then
+                             [(board,x+1,y,S.WEST)]
+                         else
+                             [])
+                        @
+                        (if(west) then
+                             [(board,x-1,y,S.EAST)]
+                         else
+                             [])
+                        @
+                        (if(south) then
+                             [(board,x,y+2,S.NORTH)]
+                         else
+                             [])
+                        @
+                        (if(north) then
+                             [(board,x,y-2,S.SOUTH)]
+                         else
+                             [])
+		    end;
+                
+                (* checkThis(b,x,y)
+                   TYPE: int * int -> (Field * int * int * Direction) list
+                   PRE:     
+                   POST: A list of all possible moves from (x,y) at the game board b's current state.
+                   EXAMPLE:
+                 *)
+                fun checkThis (x,y) = 
+                    let
+                         val this = S.checkForPiece(board,x+1,y,S.VOID)
+                    in
+                         if(this) then
+                             checkCross(x,y)
+                         else
+                             []
+                    end;
 
-        (* checkBoard(b)
-           TYPE: Field -> int
-           PRE: 
-           POST: The number of game pieces left on the game board b.
-           EXAMPLE:
-        *)
-        fun checkBoard(board) = 1;
+                (* getMoves'(b,x,y)
+                   TYPE: Field * int * int -> (Field * int * int * Direction) list
+                   PRE:     
+                   POST: A list of all possible moves from (x,y) at the game board b's current state.
+                   EXAMPLE:
+                 *)
+		fun getMoves' (0,0) = checkThis(0,0)
+                  | getMoves' (x,0) = checkThis(x,0)@(getMoves'(x-1,yLength))
+                  | getMoves' (x,y) = checkThis(x,y)@(getMoves'(x,y-1))
+
+	    in
+		getMoves'(xLength,yLength)		 
+	    end;
 
         (* checkFail(b)
            TYPE: Field -> bool
@@ -82,7 +117,7 @@ fun bestMove(board) =
            POST: Gives true if no more move can be made on the game board b. Else false.
            EXAMPLE:
         *)
-        fun checkFail(board) = true;
+        fun checkFail (board) = true;
 
         (* bestMove'(b, m)
            TYPE: Field * (Field * int * int * Direction) list -> int * int * Direction
@@ -90,15 +125,15 @@ fun bestMove(board) =
            POST: The first non-losing move.
            EXAMPLE: 
          *)
-        fun bestMove'(board,m::ms) =
+        fun bestMove' (board,m::ms) =
             if(getMoves(board) = []) then
                 []
             else
                 let
-                    val newBoard = doMove(m);
+                    val newBoard = S.move(m);
                 in
                     (* If we've won *)
-                    if(checkBoard(newBoard) = 1) then
+                    if(S.gameWon(board)) then
                         [m]
 
                     (* If we've *)
@@ -117,15 +152,29 @@ fun bestMove(board) =
            POST: SOME(The first non-losing move), NONE if no non-losing move was found.
            EXAMPLE: 
          *)
-        fun start(board) =
+        fun start (board) =
             let
                 val result = bestMove'(board,getMoves(board))
             in
                 if(result = []) then
                     NONE
                 else
-                    SOME(hd(result))
+                    let
+                        val (brd,x,y,dir) = hd(result);
+                    in
+                        SOME(x,y,dir)
+                    end
             end;
     in
         start(board)
     end;
+
+fun brT (b,SOME(x,y,dir)) = (b,x,y,dir);
+
+val b1 = S.createNewField(7,7);
+val b2 = S.move(brT(b1,bestMove(b1)));
+val b3 = S.move(brT(b2,bestMove(b2)));
+val b4 = S.move(brT(b3,bestMove(b3)));
+val b5 = S.move(brT(b4,bestMove(b4)));
+val b6 = S.move(brT(b5,bestMove(b5)));
+val b7 = S.move(brT(b6,bestMove(b6)));
