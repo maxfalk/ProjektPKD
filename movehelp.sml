@@ -25,7 +25,7 @@
 
 *)
 
-use "solitarieVec.sml";
+use "S.sml";
 
 
 

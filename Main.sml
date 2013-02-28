@@ -1,12 +1,7 @@
 (**)
-load "Mosmlcgi";
-use "SolitaireHtml.sml";
-use "solitarieVec.sml";
 
 
-
-
-(*open html;*)
+open SolitaireHtml;
 
 
 val B = 
@@ -15,7 +10,7 @@ let
 	val rawSize = 7;
 	val newBoard = S.createNewField(columnSize,rawSize);
 	(*val changePicture = Mosmlcgi.cgi_field_string*)
-	val url = "http://user.it.uu.se/cgi-bin/cgiwrap/pefr2313/Main.cgi"
+	val url = "http://user.it.uu.se/cgi-bin/cgiwrap/mani9271/test.cgi"
 
 
 	fun createBoard(x,y) =

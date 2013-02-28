@@ -1,0 +1,1 @@
+mosmlc S.sig S.sml SolitaireHtml.sml Main.sml -o test.cgi
