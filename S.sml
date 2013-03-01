@@ -1,3 +1,6 @@
+(*
+use "S.Sig";
+*)
 
 
 structure S :> S=

@@ -11,6 +11,8 @@ sig
 	val sub : Field * int * int-> Fieldstate
 	val checkForPiece : Field * int * int * Fieldstate -> bool 
 	val fieldLength : Field -> (int * int)
+	val updateVector: Field * int * int * Fieldstate -> Field
+	val update : 'a vector * int * 'a -> 'a vector
 	(*
 	EN jag har förlorat funktion. Alexanders AI kan räkna ut det?
 	highscore lista 
