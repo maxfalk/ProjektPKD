@@ -161,7 +161,7 @@ struct
 	EXAMPLE:
 	*)
 	fun rules(cField,x,y,NORTH) = checkForPiece(cField,x,y+2,VOID) andalso checkForPiece(cField,x,y+1,EXISTS)
-		| rules(cField,x,y,SOUTH) = checkForPiece(cField,x,y-2,VOID) andalso checkForPiece(cField,x,y+1,EXISTS)
+		| rules(cField,x,y,SOUTH) = checkForPiece(cField,x,y-2,VOID) andalso checkForPiece(cField,x,y-1,EXISTS)
 		| rules(cField,x,y,EAST) =  checkForPiece(cField,x+2,y,VOID) andalso checkForPiece(cField,x+1,y,EXISTS)
 		| rules(cField,x,y,WEST) = checkForPiece(cField,x-2,y,VOID) andalso checkForPiece(cField,x-1,y,EXISTS) 
 	(*-------------------------------------------------------------------------------------------------------------*)
@@ -200,7 +200,7 @@ struct
 			val totalFound = totalFound + amountFound
 		
 		in
-			if totalFound = 1 then
+			if totalFound > 1 then
 				false
 			else
 				gameWon'(cField,y-1,totalFound)			

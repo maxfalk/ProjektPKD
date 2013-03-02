@@ -1,4 +1,5 @@
 (*
+
 load "Mosmlcgi";
 *)
 
@@ -6,19 +7,19 @@ open Mosmlcgi;
 exception HTML of string;
 
 
-fun makePage(script,table) =
+fun makePage(script,table,onload) =
 	"Content-type: text/html\n\n" ^
 	"<HTML>\n" ^
-	"<BODY>\n" ^
+	"<BODY onload="^onload^">\n" ^
 	script ^ table ^
 	"</BODY>\n"^
 	"</HTML>\n"
 	;
 
-fun printPage(script,table) = print(makePage(script,table));	
+fun printPage(script,table,onload) = print(makePage(script,table,onload));	
 
-fun makeForm(url, text) =
-    "<FORM method = \"post\" action = \"" ^ url ^ "\">\n" ^
+fun makeForm(url, text, name) =
+    "<FORM method = \"post\" id="^name^" action = \"" ^ url ^ "\">\n" ^
     text ^
     "</FORM>\n";
 	
@@ -59,12 +60,10 @@ fun makeButton(scriptFunName,buttonText) =
 	;
 
 	
-fun makeInput(itype, name, value) =
-	"<INPUT type = \"" ^ itype ^ "\" " ^
+fun makeInput(mtype, name, id, value) =
+	"<INPUT type = \"" ^ mtype ^ "\" " ^
 	(if name="" then " " else ("name = \"" ^ name ^ "\" ")) ^
-	     (if value="" then " " else ("value = \"" ^ value ^ "\" ")) ^
+	(if value="" then " " else ("value = \"" ^ value ^ "\" ")) ^
+	(if id="" then " " else ("id = \"" ^ id ^ "\" ")) ^
 		  ">\n";
 	
-fun makeSubmit name = 
-	makeInput("submit", "", name);
-

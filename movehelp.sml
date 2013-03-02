@@ -22,10 +22,10 @@
 8. Ge tillbaka sista elementet i DM.
 9. Slut.
 
-
+use "S.sml";
 *)
 
-use "S.sml";
+
 
 
 
@@ -168,7 +168,7 @@ fun bestMove (board) =
     in
         start(board)
     end;
-
+(*
 fun brT (b,SOME(x,y,dir)) = (b,x,y,dir);
 
 val b1 = S.createNewField(7,7);
@@ -178,3 +178,4 @@ val b4 = S.move(brT(b3,bestMove(b3)));
 val b5 = S.move(brT(b4,bestMove(b4)));
 val b6 = S.move(brT(b5,bestMove(b5)));
 val b7 = S.move(brT(b6,bestMove(b6)));
+*)
