@@ -17,6 +17,8 @@ let
 	val change = Mosmlcgi.cgi_field_string("input1")
 	val moveCoords = Mosmlcgi.cgi_field_string("input2")
 	val help = Mosmlcgi.cgi_field_string("input4")
+	val undoMoves = Mosmlcgi.cgi_field_string("input5")
+	val undoPressed = Mosmlcgi.cgi_field_string("input6")
 	(*---------------------------------------------------------------------------*)
 	fun convertToFieldState(x) =
 		(case x of
@@ -47,12 +49,15 @@ let
 			convert(board@[out],line)
 		end;
 	(*---------------------------------------------------------------------------*)
-	fun convertRowToString(board,x,y) =
-		if (x < columnSize) then
-			(case S.sub(board,x,y) of
+	fun convertFromFieldState(x) =
+			case x of
 				S.OUT 		=>	"OUT"
 				| S.VOID 	=>  "VOID"
 				| S.EXISTS	=>  "EXISTS"
+	(*---------------------------------------------------------------------------*)
+	fun convertRowToString(board,x,y) =
+		if (x < columnSize) then
+			(convertFromFieldState(S.sub(board,x,y)) 
 			)^","^convertRowToString(board,x+1,y)
 		else
 			""
@@ -79,14 +84,19 @@ let
 			else
 			 ""
 	(*---------------------------------------------------------------------------*)
-	fun convertDirection(x) = 
+	fun convertToDirection(x) = 
 		(case x of
 			"SOUTH" => S.SOUTH
 			| "NORTH" => S.NORTH
 			| "EAST" => S.EAST
 			| "WEST" => S.WEST)
 	(*---------------------------------------------------------------------------*)
-
+	fun convertFromDirection(x) = 
+		(case x of
+			S.SOUTH	=>	"SOUTH"  
+			| S.NORTH	=> 	"NORTH" 
+			| S.EAST	=>	"EAST"  
+			| S.WEST	=>	"WEST")
 	(*---------------------------------------------------------------------------*)
 	fun convertMove(line,A,out) =
 		let 
@@ -100,31 +110,82 @@ let
 				convertMove(String.substring(line,1,size(line)-1),A^cChar,out)	
 		end
 	(*---------------------------------------------------------------------------*)
-	fun listtostring([]) = ""
-		| listtostring(first::last) = first^listtostring(last)
+	fun checkUndo(pressed,moves) = isSome(moves) andalso pressed <> "true"
 	(*---------------------------------------------------------------------------*)
-		val (movex,movey,movedir) = case moveCoords of 
-					NONE => (NONE,NONE,NONE)
-					| _ => let val a = convertMove(valOf(moveCoords),"",[]) in (Int.fromString(hd(a)),Int.fromString(hd(tl(a))),SOME(convertDirection(hd(tl(tl(a)))))) end
+	val (movex,movey,movedir) = 
+		case moveCoords of 
+			NONE => (NONE,NONE,NONE)
+			| _ => 	let 
+						val a = convertMove(valOf(moveCoords),"",[]) 
+					in 
+						(Int.fromString(hd(a)),Int.fromString(hd(tl(a))),SOME(convertToDirection(hd(tl(tl(a)))))) 
+					end
 
-		val board = case change of
-				NONE =>	S.createNewField(columnSize,rawSize)
-				| _	=> convert([],valOf(change))
-				
-		val (movex,movey,movedir) = case help of
-					 SOME("true") => let val (a,b,c) = valOf(bestMove(board)) in (SOME(a),SOME(b),SOME(c)) end 
-					| _ => (movex,movey,movedir)
-					
-					
-		val board = case movex of
-					NONE => board
-					| _ => S.move(board,valOf(movex),valOf(movey),valOf(movedir))
+	val undoMoves = 
+		case checkUndo(getOpt(undoPressed,"false"),moveCoords) of
+			false => getOpt(undoMoves,"")
+			| true => let 
+						val (movexInverse,moveyInverse,movedirInverse)  = S.saveInverseMove(valOf(movex),valOf(movey),valOf(movedir)) 
+					in 
+						Int.toString(movexInverse)^
+						","^
+						Int.toString(moveyInverse)^
+						","^
+						convertFromDirection(movedirInverse)^
+						(if isSome(undoMoves) then
+							","^valOf(undoMoves) 
+						else
+							"")
+					end
+			
+	val board = 
+		case change of
+			NONE =>	S.createNewField(columnSize,rawSize)
+			| _	=> convert([],valOf(change))
+			
+	val (movex,movey,movedir) = 
+		case help of
+			 SOME("true") => let 
+								val (a,b,c) = valOf(bestMove(board)) 
+							in 
+								(SOME(a),SOME(b),SOME(c)) 
+							end 
+			| _ => (movex,movey,movedir)
+						
+	val board = 
+		case movex of
+				NONE => board
+				| _ => case getOpt(undoPressed,"false") of
+						"false" => S.move(board,valOf(movex),valOf(movey),valOf(movedir))
+						| "true" => S.undo(board,valOf(movex),valOf(movey),valOf(movedir))
+	
 
-
-		val form  	 = makeForm (url, makeInput("text", "input1", "input1",convertAllRows(board,0,0))^makeInput("text", "input2","input2","empty")^makeInput("text", "input3","input3",Bool.toString(S.gameWon(board)))^makeInput("text", "input4","input4","empty"),"myform")
-		val script 	= "var coordx = \"\";\nvar coordy = \"\";\nvar help = \"false\";\nfunction saveID(x,y)\n{\ncoordx = x;\ncoordy = y;\n}\nfunction validMove(x1,y1,x2,y2)\n{\nvar xdiff = x1 -x2;\nvar ydiff = y1 -y2;\nvar form = document.getElementById(\"input2\");\nif (xdiff == 0)\n{\nif (ydiff == 2)\n{\nform.value = x1 + \",\" + y1 + \",\" + \"SOUTH;\";\ndocument.forms[\"myform\"].submit();\n}\nelse if (ydiff == -2)\n{\nform.value = x1 + \",\" + y1 + \",\" + \"NORTH;\";\ndocument.forms[\"myform\"].submit();\n}\n}\nelse if  (ydiff == 0)\n{\nif (xdiff == 2) \n{\nform.value = x1 + \",\" + y1 + \",\" + \"WEST;\";\ndocument.forms[\"myform\"].submit();\n}\nelse if (xdiff == -2)\n{\nform.value = x1 + \",\" + y1 + \",\" + \"EAST;\";\ndocument.forms[\"myform\"].submit();\n}\n} \n}\nfunction ChooseBall(x)\n{\nif (x.src == \"http://user.it.uu.se/~mani9271/Ball.png\" && coordx == \"\" && coordy == \"\")\n{\nvar temp = (x.id).split(\".\");\nsaveID(temp[0],temp[1]);\nx.src=\"http://user.it.uu.se/~mani9271/ChosenBall.png\";\n}\nelse if (x.src == \"http://user.it.uu.se/~mani9271/ChosenBall.png\")\n{\nsaveID(\"\",\"\");\nx.src=\"http://user.it.uu.se/~mani9271/Ball.png\";\n}\nelse if (x.src == \"http://user.it.uu.se/~mani9271/EmptySpot.png\" && coordx != \"\" && coordy != \"\")\n{\nvar temp1 = (x.id).split(\".\");\nvalidMove(coordx,coordy,temp1[0],temp1[1]);\n}\ndocument.getElementById(\"t\").innerHTML=x.src+\" : \"+coordx+\" : \"+coordy;\n}\nfunction reset()\n{\nwindow.location = \"http://user.it.uu.se/cgi-bin/cgiwrap/mani9271/test.cgi\";\n}\nfunction movehelp()\n{\nvar form = document.getElementById(\"input4\");\nform.value = \"true\";\ndocument.forms[\"myform\"].submit();\n}\nfunction win()\n{\nvar form = document.getElementById(\"input3\");\nif (form.value == \"true\")\n{\n\ndocument.getElementById(\"t\").innerHTML=\"You Winn!!\";\n}\n\n}\n\n"
-		val page 	= "<div id=\"t\"></div>"^makeScript(script)^makeTable("30","margin-left: 20%;",createAllRows(board,0,0))^form^makeButton("reset()","restart")^makeButton("movehelp()","Help")
+	(*---------------------------------------------------------------------------*)			
+	fun makeMyInputs() =
+		makeInput("hidden", "input1", "input1",convertAllRows(board,0,0))^
+		makeInput("hidden", "input2","input2","empty")^
+		makeInput("hidden", "input3","input3",Bool.toString(S.gameWon(board)))^
+		makeInput("hidden", "input4","input4","empty")^
+		makeInput("text", "input5","input5",undoMoves)^
+		makeInput("text", "input6","input6","false")
+	(*---------------------------------------------------------------------------*)
+	fun makeMyPage() =
+		let
+			val htmlDiv = "<div id=\"t\"></div>"
+			val script 	= "var coordx = \"\";\nvar coordy = \"\";\nvar help = \"false\";\nfunction saveID(x,y)\n{\ncoordx = x;\ncoordy = y;\n}\nfunction validMove(x1,y1,x2,y2)\n{\nvar xdiff = x1 -x2;\nvar ydiff = y1 -y2;\nvar form = document.getElementById(\"input2\");\nif (xdiff == 0)\n{\nif (ydiff == 2)\n{\nform.value = x1 + \",\" + y1 + \",\" + \"SOUTH;\";\ndocument.forms[\"myform\"].submit();\n}\nelse if (ydiff == -2)\n{\nform.value = x1 + \",\" + y1 + \",\" + \"NORTH;\";\ndocument.forms[\"myform\"].submit();\n}\n}\nelse if  (ydiff == 0)\n{\nif (xdiff == 2) \n{\nform.value = x1 + \",\" + y1 + \",\" + \"WEST;\";\ndocument.forms[\"myform\"].submit();\n}\nelse if (xdiff == -2)\n{\nform.value = x1 + \",\" + y1 + \",\" + \"EAST;\";\ndocument.forms[\"myform\"].submit();\n}\n} \n}\nfunction ChooseBall(x)\n{\nvar temp = (x.id).split(\".\");\nif (x.src == \"http://user.it.uu.se/~mani9271/Ball.png\" && coordx == \"\" && coordy == \"\")\n{\nsaveID(temp[0],temp[1]);\nx.src=\"http://user.it.uu.se/~mani9271/ChosenBall.png\";\noldball = x;\n}\nelse if (x.src == \"http://user.it.uu.se/~mani9271/Ball.png\" && coordx != \"\" && coordy != \"\")\n{\nsaveID(temp[0],temp[1]);\noldball.src=\"http://user.it.uu.se/~mani9271/Ball.png\";\noldball = x;\nx.src=\"http://user.it.uu.se/~mani9271/ChosenBall.png\";\n\n}\nelse if (x.src == \"http://user.it.uu.se/~mani9271/ChosenBall.png\")\n{\nsaveID(\"\",\"\");\nx.src=\"http://user.it.uu.se/~mani9271/Ball.png\";\n}\nelse if (x.src == \"http://user.it.uu.se/~mani9271/EmptySpot.png\" && coordx != \"\" && coordy != \"\")\n{\nvar temp1 = (x.id).split(\".\");\nvalidMove(coordx,coordy,temp1[0],temp1[1]);\n}\n//document.getElementById(\"t\").innerHTML=x.src+\" : \"+coordx+\" : \"+coordy;\n}\nfunction reset()\n{\nwindow.location = \"http://user.it.uu.se/cgi-bin/cgiwrap/mani9271/test.cgi\";\n}\nfunction movehelp()\n{\nvar form = document.getElementById(\"input4\");\nform.value = \"true\";\ndocument.forms[\"myform\"].submit();\n}\nfunction win()\n{\nvar form = document.getElementById(\"input3\");\nif (form.value == \"true\")\n{\n\ndocument.getElementById(\"t\").innerHTML=\"You Win!!\";\n}\n\n}\nfunction undo()\n{\n\nvar form = document.getElementById(\"input5\");\nvar formValue = form.value;\nif (formValue != \"\")\n{\nvar temp = formValue.split(\",\");\nvar x1 = temp[0];\nvar y1 = temp[1];\nvar direct = temp[2]; \nvar x2 = \"\";\nvar y2 = \"\";\nvar stringlength = (x1+y1+direct+\",,,\").length;\n\nswitch(direct)\n{\ncase \"NORTH\":\nx2 =  x1;y1 = y1-2;\nbreak;\ncase \"SOUTH\":\nx2 =  x1;y2=2+y1\nbreak;\ncase \"EAST\":\nx2 =  x1-2;y2 = y1;\nbreak;\ncase \"WEST\":\nx2 = x1+2;y2 = y1;\nbreak;\n}\n\n\n\nform.value = formValue.substring(stringlength);\ndocument.getElementById(\"input6\").value = \"true\";\nvalidMove(x1,y1,x2,y2);\n\n//document.getElementById(\"t\").innerHTML=stringlength;\ndocument.getElementById(\"t\").innerHTML=x1+\", \"+y1 +\", \"+direct+\", \"+ x2+\", \"+y2;\n}\n\n}\n\n"
+		in
+			htmlDiv^
+			makeScript(script)^
+			makeTable("30","margin-left: 20%;",createAllRows(board,0,0))^
+			makeForm (url, makeMyInputs(),"myform")^
+			makeButton("reset()","restart")^
+			makeButton("movehelp()","Help")^
+			makeButton("undo()","Ångra")
+		
+		
+		end
+	(*---------------------------------------------------------------------------*)	
 	in 
-		printPage("",page, "win()")
+		printPage("",makeMyPage(), "win()")
 
 	end;

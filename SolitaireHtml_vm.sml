@@ -63,7 +63,7 @@ fun makeButton(scriptFunName,buttonText) =
 fun makeInput(mtype, name, id, value) =
 	"<INPUT type = \"" ^ mtype ^ "\" " ^
 	(if name="" then " " else ("name = \"" ^ name ^ "\" ")) ^
-	(if value="" then " " else ("value = \"" ^ value ^ "\" ")) ^
+	"value = \"" ^ value ^ "\" " ^
 	(if id="" then " " else ("id = \"" ^ id ^ "\" ")) ^
 		  ">\n";
 	
