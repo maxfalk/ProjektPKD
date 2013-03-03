@@ -1,9 +1,7 @@
 (*
-use "S.Sig";
+Kör utan signature för att underlätta för alla.
 *)
-
-
-structure S :> S=
+structure S =
 struct
 	(* 
 	REPRESENTAION CONVENTION: EXISTS, VOID och OUT representerar 3 lägen på positioner på ett seplbräde.
@@ -22,11 +20,6 @@ struct
 	REPRESENTAION INVARIANT: 
 	*)
 	datatype Direction = WEST | EAST | SOUTH | NORTH
-	(* oldMoves
-	   TYPE:  (int * int * Direction) list ref
-	   VALUE: Här sparas en lista med inversen till alla drag som görs när man spelar.
-	*)
-	val oldMoves : (int * int * Direction) list ref = ref []
 	(*-------------------------------------------------------------------------------------------------------------*)
 	(*sub(cField,x,y)
 	TYPE: Field * int * int -> Fieldstate
@@ -118,7 +111,7 @@ struct
 	(*saveInverseMove(x,y,direct)
 	TYPE: int * int * Direction -> unit
 	PRE: none.
-	SIDE-EFFECT: Sparar inversen till x,y och direct i variablen oldMoves.
+	POST: Inversen till det drag som x,y,direct skulle gjort
 	EXAMPLE:
 	*)
 	fun saveInverseMove(x,y,direct) =
@@ -135,16 +128,17 @@ struct
 										| NORTH => SOUTH)
 		
 		in
-			oldMoves := (ix,iy,inverseDirection):: !oldMoves
+			(ix,iy,inverseDirection)
 		
 		end
 	(*-------------------------------------------------------------------------------------------------------------*)
-	(*movedirection(cField,x,y,direct)
-	TYPE: Field * int * int * Direction -> Field
+	(*movedirection(cField,x,y,direct,FromValue,OverValue,Value)
+	TYPE: Field * int * int * Direction * Fieldstate * Fieldstate * Fieldstate   -> Field
 	PRE: direct = WEST, så måste x-2,y befinna sig inom cField.
 		 direct = EAST, så måste x+2,y befinna sig inom cField.
 		 direct = SOUTH, så måste x,y-2 befinna sig inom cField.
 		 direct = NORTH, så måste x,y+2 befinna sig inom cField.
+		 FromValue=OverValue=Value= {EXISTS,VOID}
 	POST: cField uppdaterade med FromValue på platsen x,y, med Value på sin destinations plats och OverValue på platsen som hoppas över i processen.
 	EXAMPLE:
 	*)
@@ -157,7 +151,11 @@ struct
 	(*rules(cField,x,y,direct)
 	TYPE: Field * int * int * Direction -> bool
 	PRE: none.
-	POST:  true när en plats (x,y) berhåller ett speciellt värde annars false.
+	POST:  	direct = NORTH så måste (x,y+2) vara en lidigt plats (VOID) och (x,y+1) vara en "ej liedigplats" (EXISTS),
+			direct = SOUTH så måste (x,y-2) vara en lidigt plats (VOID) och (x,y-1) vara en "ej liedigplats" (EXISTS),
+			direct = EAST så måste (x+2,y) vara en lidigt plats (VOID) och (x+1,y) vara en "ej liedigplats" (EXISTS),
+			direct = WEST så måste (x-2,y) vara en lidigt plats (VOID) och (x-1,y) vara en "ej liedigplats" (EXISTS),
+			alla dessa fall ger true, annars ger den false
 	EXAMPLE:
 	*)
 	fun rules(cField,x,y,NORTH) = checkForPiece(cField,x,y+2,VOID) andalso checkForPiece(cField,x,y+1,EXISTS)
@@ -169,7 +167,7 @@ struct
 	TYPE: Field * int * int * Direction -> Field
 	PRE: none.
 	POST: Vid ett giltigt drag: cField uppdaterat enligt draget (x,y) i riktingen direkt. Enligt regler för att röra pjäser i Solitarie.
-		 Vid ett oglitigt drag blir cField oförändrad.
+		  Vid ett oglitigt drag blir cField oförändrad.
 	EXAMPLE:
 	*)
 	fun move(cField,x,y,direc) =
@@ -179,32 +177,9 @@ struct
 			val rulespassed = rules(cField,x,y,direc) 
 		in
 			if PeiceToMove andalso OOB andalso rulespassed then
-				(saveInverseMove(x,y,direc);
-				movedirection(cField,x,y,direc,VOID,VOID,EXISTS))
+				movedirection(cField,x,y,direc,VOID,VOID,EXISTS)
 			else
 				cField
-		end
-	(*-------------------------------------------------------------------------------------------------------------*)
-	(*gameWon'(cField,y,totalFound)
-	TYPE: Field * int * int -> bool
-	PRE: 0 <= y < längden på cField i y-led.
-	POST: Ger true om det bara finns en pjäs på planen cField, annars false.
-	EXAMPLE:
-	*)
-	(*VARIANT: y*)
-	fun gameWon'(_,0,_) = true 
-		| gameWon'(cField as field(plan),y,totalFound) = 
-		let
-			val subPlan = Vector.sub(plan,y-1)
-			val amountFound = Vector.foldr (fn (x,y) => if x = EXISTS then y+1 else y) 0 subPlan
-			val totalFound = totalFound + amountFound
-		
-		in
-			if totalFound > 1 then
-				false
-			else
-				gameWon'(cField,y-1,totalFound)			
-
 		end
 	(*-------------------------------------------------------------------------------------------------------------*)
 	(*gameWon(cField,y,totalFound)
@@ -215,28 +190,40 @@ struct
 	*)
 	fun gameWon(cField) = 
 		let
+			(*gameWon'(cField,y,totalFound)
+			TYPE: Field * int * int -> bool
+			PRE: 0 <= y < längden på cField i y-led.
+			POST: Ger true om det bara finns en pjäs på planen cField, annars false.
+			EXAMPLE:
+			*)
+			(*VARIANT: y*)
+			fun gameWon'(_,0,_) = true 
+				| gameWon'(cField as field(plan),y,totalFound) = 
+				let
+					val subPlan = Vector.sub(plan,y-1)
+					val amountFound = Vector.foldr (fn (x,y) => if x = EXISTS then y+1 else y) 0 subPlan
+					val totalFound = totalFound + amountFound
+				
+				in
+					if totalFound > 1 then
+						false
+					else
+						gameWon'(cField,y-1,totalFound)			
+
+		end
 			val (x,y) = fieldLength(cField)
 		in
 			gameWon'(cField,y,0)
 		end
 	(*-------------------------------------------------------------------------------------------------------------*)
-	(*undo(cField)
-	TYPE: Field -> Field
-	PRE: oldMoves måste finnas med typen (int * int * Direction) list ref.
-	POST: Ett nytt Field med det senaste draget som var gjort borta. dvs ett nytt Field som det såg ut innan det senaste draget gjordes.
-	SIDEFFECT: huvudet på (första elementet) oldMoves tas bort om length( !oldMoves) <> 0.
+	(*undo(cField,x,y,direct)
+	TYPE: Field * int * int * Direction -> Field
+	PRE: x,y,direct måste vara inversen till ett drag utfört av funtionen move.
+	POST: Ett nytt Field med draget x,y,direct gjort, med VOID på platen man flyttar från och EXISTS på platsen man hoppar över samt den man flyttar till. 
 	EXAMPLE:
 	*)
-	fun undo(cField) = 
-		if length( !oldMoves) <> 0 then
-			let
-				val (x,y,direct) = hd( !oldMoves)
-			in
-				(oldMoves := tl( !oldMoves);				
-				movedirection(cField,x,y,direct,VOID,EXISTS,EXISTS))
-			end
-		else
-			cField
+	fun undo(cField,x,y,direct) = movedirection(cField,x,y,direct,VOID,EXISTS,EXISTS)
+
 	
 
 	
