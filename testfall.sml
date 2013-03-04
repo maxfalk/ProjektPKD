@@ -112,7 +112,7 @@ S.field(#[
 (S.move(myfield,10,20,S.SOUTH) = myfield, "S.move(myfield,10,20,S.SOUTH)");
 
 (*gameWon'(cField as field(plan),y,totalFound)*)
-
+(*
 (S.gameWon'(myfieldGameWon4x4,4,0) = false, "gameWon'(myfield,4,0)");
 (S.gameWon'(
 S.field(#[
@@ -121,7 +121,7 @@ S.field(#[
 #[S.VOID,S.VOID,S.VOID,S.VOID],
 #[S.VOID,S.VOID,S.VOID,S.EXISTS]
 ]),4,0) = true, "gameWon'(!!kolla koden!!,3,0)");
-
+*)
 (*gameWon(cField)*)
 (S.gameWon(myfieldGameWon4x4) = false, "S.gameWon(myfieldGameWon4x4)");
 (S.gameWon(
@@ -144,5 +144,22 @@ S.field(#[
 (S.undo(S.move(undoField,6,4,S.WEST),3,3,S.EAST) = undoField,"S.undo(S.move(undoField,2,4,S.WEST))");
 (S.undo(S.undo(S.move(S.move(undoField,3,4,S.SOUTH),3,2,S.NORTH),3,4,S.SOUTH),3,3,S.NORTH) = undoField,"S.undo(S.move(undoField,2,4,S.WEST))");
 
+(*SaveFile*)
+(S.saveHighScoreList("test.score",[("Max",1,2),("Johan",3,4),("Erik",5,6),("Jonas",7,8),("Adam",9,10)]));
+
+(*loadFile*)
+(S.loadHighScoreList("test.score") = [("Max",1,2),("Johan",3,4),("Erik",5,6),("Jonas",7,8),("Adam",9,10)],"loadHighScoreList");
+
+(*sortHighScoreList*)
+(S.sortHighScoreList("points",[("Johan",3,4),("Max",1,2),("Jonas",7,8),("Erik",5,6),("Adam",9,10)]) = [("Adam",9,10),("Jonas",7,8),("Erik",5,6),("Johan",3,4),("Max",1,2)],"sortHighScoreList");
+
+(*addPoints(points)*)
+(S.addPoints(1) = 2,"addPoints");
+(*removePoint(points)*)
+(S.removePoint(2) = 1,"removePoint");
+(*getTime()*)
+(S.getTime() = Time.now(),"getTime()");
+(*getTimeDiff(xTime,yTime)*)
+(S.getTimeDiff(S.getTime(),S.getTime()) = 0,"getTimeDiff");
 
 
