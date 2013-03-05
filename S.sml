@@ -5,6 +5,7 @@ load "TextIO";
 load "Int";
 *)
 
+
 structure S =
 struct
 	(*Används då filen man försöker ladda är på någotsätt fel konfigurerad.*)
@@ -331,7 +332,7 @@ struct
 			POST: Texten på den rad som iStream pekar på för tillfället.
 			EXAMPLE:
 			*)
-			fun loadRow(iStream) = valOf(TextIO.inputLine(iStream))
+			fun loadRow(iStream) = TextIO.inputLine(iStream)
 			(*-------------------------------------------------------------------------------------------------------------*)
 			(*loadList(iStream)
 			TYPE: instream -> string list
@@ -457,7 +458,39 @@ struct
 		
 		*)
 		fun addToHighScroeList((name,timeSec,points),fList) = (name,timeSec,points)::fList
-
+		(*getSpecificField(fType)
+		TYPE: string -> Field
+		PRE: fType = "cross","circle" eller "hexagon"
+		POST: Ett Field av en förbestämd storlek och form.
+		EXAMPLE:
+		*)
+		fun getSpecificField(fType) =
+			let
+				val newField = case fType of
+								"cross" => #[#[OUT,OUT,EXISTS,EXISTS,EXISTS,OUT,OUT],
+												#[OUT,OUT,EXISTS,EXISTS,EXISTS,OUT,OUT],
+												#[EXISTS,EXISTS,EXISTS,EXISTS,EXISTS,EXISTS,EXISTS],
+												#[EXISTS,EXISTS,EXISTS,VOID,EXISTS,EXISTS,EXISTS],
+												#[EXISTS,EXISTS,EXISTS,EXISTS,EXISTS,EXISTS,EXISTS],
+												#[OUT,OUT,EXISTS,EXISTS,EXISTS,OUT,OUT],
+												#[OUT,OUT,EXISTS,EXISTS,EXISTS,OUT,OUT]]
+								| "circle" => #[#[OUT,OUT,EXISTS,EXISTS,EXISTS,OUT,OUT],
+												#[OUT,EXISTS,EXISTS,EXISTS,EXISTS,EXISTS,OUT],
+												#[EXISTS,EXISTS,EXISTS,EXISTS,EXISTS,EXISTS,EXISTS],
+												#[EXISTS,EXISTS,EXISTS,VOID,EXISTS,EXISTS,EXISTS],
+												#[EXISTS,EXISTS,EXISTS,EXISTS,EXISTS,EXISTS,EXISTS],
+												#[OUT,EXISTS,EXISTS,EXISTS,EXISTS,OUT,OUT],
+												#[OUT,OUT,EXISTS,EXISTS,EXISTS,OUT,OUT]]
+								| "hexagon" => #[#[OUT,OUT,OUT,EXISTS,OUT,OUT,OUT],
+												#[OUT,OUT,EXISTS,EXISTS,EXISTS,OUT,OUT],
+												#[OUT,EXISTS,EXISTS,EXISTS,EXISTS,EXISTS,OUT],
+												#[EXISTS,EXISTS,EXISTS,VOID,EXISTS,EXISTS,EXISTS],
+												#[OUT,EXISTS,EXISTS,EXISTS,EXISTS,EXISTS,OUT],
+												#[OUT,OUT,EXISTS,EXISTS,EXISTS,OUT,OUT],
+												#[OUT,OUT,OUT,EXISTS,OUT,OUT,OUT]]
+			in
+				field(newField)
+			end
 	
 (*-------------------------------------------------------------------------------------------------------------*)
 end;
