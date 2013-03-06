@@ -154,7 +154,7 @@ S.field(#[
 (S.sortHighScoreList("points",[("Johan",3,4),("Max",1,2),("Jonas",7,8),("Erik",5,6),("Adam",9,10)]) = [("Adam",9,10),("Jonas",7,8),("Erik",5,6),("Johan",3,4),("Max",1,2)],"sortHighScoreList(points)");
 (S.sortHighScoreList("time",[("Johan",3,4),("Max",1,2),("Jonas",0,11),("Erik",5,6),("Adam",9,10)]) = [("Jonas",0,11),("Max",1,2),("Johan",3,4),("Erik",5,6),("Adam",9,10)],"sortHighScoreList(time)");
 (*addPoints(points)*)
-(S.addPoints(1) = 2,"addPoints");
+(S.addPoint(1) = 2,"addPoint");
 (*removePoint(points)*)
 (S.removePoint(2) = 1,"removePoint");
 (*getTime()*)
@@ -173,21 +173,21 @@ S.addToHighScroeList("test.score",("Olle",1,2));
 			#[S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS],
 			#[S.OUT,S.OUT,S.EXISTS,S.EXISTS,S.EXISTS,S.OUT,S.OUT],
 			#[S.OUT,S.OUT,S.EXISTS,S.EXISTS,S.EXISTS,S.OUT,S.OUT]]),"S.getSpecificField(cross)");
-(S.getSpecificField("circle") = 
-			S.field(#[#[S.OUT,S.OUT,S.EXISTS,S.EXISTS,S.EXISTS,S.OUT,S.OUT],
-			#[S.OUT,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.OUT],
-			#[S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS],
-			#[S.EXISTS,S.EXISTS,S.EXISTS,S.VOID,S.EXISTS,S.EXISTS,S.EXISTS],
-			#[S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS],
-			#[S.OUT,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.OUT,S.OUT],
-			#[S.OUT,S.OUT,S.EXISTS,S.EXISTS,S.EXISTS,S.OUT,S.OUT]]),"getSpecificField(circle)");
-(S.getSpecificField("hexagon") =			
+(S.getSpecificField("rumb") = 
 			S.field(#[#[S.OUT,S.OUT,S.OUT,S.EXISTS,S.OUT,S.OUT,S.OUT],
 			#[S.OUT,S.OUT,S.EXISTS,S.EXISTS,S.EXISTS,S.OUT,S.OUT],
 			#[S.OUT,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.OUT],
 			#[S.EXISTS,S.EXISTS,S.EXISTS,S.VOID,S.EXISTS,S.EXISTS,S.EXISTS],
 			#[S.OUT,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.OUT],
 			#[S.OUT,S.OUT,S.EXISTS,S.EXISTS,S.EXISTS,S.OUT,S.OUT],
-			#[S.OUT,S.OUT,S.OUT,S.EXISTS,S.OUT,S.OUT,S.OUT]]),"S.getSpecificField(hexagon)");
+			#[S.OUT,S.OUT,S.OUT,S.EXISTS,S.OUT,S.OUT,S.OUT]]),"getSpecificField(circle)");
+(S.getSpecificField("hexagon") =			
+			S.field(#[#[S.OUT,S.OUT,S.EXISTS,S.EXISTS,S.EXISTS,S.OUT,S.OUT],
+			#[S.OUT,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.OUT],
+			#[S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS],
+			#[S.EXISTS,S.EXISTS,S.EXISTS,S.VOID,S.EXISTS,S.EXISTS,S.EXISTS],
+			#[S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS],
+			#[S.OUT,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.OUT],
+			#[S.OUT,S.OUT,S.EXISTS,S.EXISTS,S.EXISTS,S.OUT,S.OUT]]),"S.getSpecificField(hexagon)");
 
 

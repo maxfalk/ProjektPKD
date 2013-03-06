@@ -1,9 +1,9 @@
 (*
 load "Mosmlcgi";
-
-*)
 open Mosmlcgi;
+*)
 
+open Mosmlcgi;
 exception HTML of string;
 
 

@@ -1,10 +1,13 @@
 (*
-Kör utan signature för att underlätta för alla.
 load "Time";
 load "TextIO";
 load "Int";
+load "Bool";
 *)
-
+load "Time";
+load "TextIO";
+load "Int";
+load "Bool";
 
 structure S =
 struct
@@ -36,21 +39,26 @@ struct
 	*)
 	fun sub(field(plan),x,y) = Vector.sub(Vector.sub(plan,y),x)
 	
-	(*-------------------------------------------------------------------------------------------------------------*)
-	(*update(vec,x,value)
-	TYPE: 'a vector * int * 'a -> 'a vector
-	PRE: 0 < = x < length(vec)
-	POST: vec uppdaterat med value på position x
-	EXAMPLE:
-	*)
-	fun update(vec,x,value) = Vector.tabulate(Vector.length(vec), (fn y => if y = x then value else Vector.sub(vec,y)) )
+
 	(*updateVector(vec,x,y,value)
 	TYPE: Field * int * int * 'a -> Field
 	PRE: 0 < = y < length(vec), 0 < = x < length(length(vec)), 
 	POST: vec uppdaterat på element (x,y) (kolumn,rad) med value.
 	EXAMPLE:
 	*)
-	fun updateVector(field(vec),x,y,value) = field(update(vec,y,update(Vector.sub(vec,y),x,value)))
+	fun updateVector(field(vec),x,y,value) = 
+		let
+			(*-------------------------------------------------------------------------------------------------------------*)
+			(*update(vec,x,value)
+			TYPE: 'a vector * int * 'a -> 'a vector
+			PRE: 0 < = x < length(vec)
+			POST: vec uppdaterat med value på position x
+			EXAMPLE:
+			*)
+			fun update(vec,x,value) = Vector.tabulate(Vector.length(vec), (fn y => if y = x then value else Vector.sub(vec,y)) )
+		in
+			field(update(vec,y,update(Vector.sub(vec,y),x,value)))
+		end
 	(*-------------------------------------------------------------------------------------------------------------*)	
 	(*createNewField(xLength,yLength)
 	TYPE: int * int -> Field
@@ -173,7 +181,7 @@ struct
 	(*move(cField,x,y,direc)
 	TYPE: Field * int * int * Direction -> Field
 	PRE: none.
-	POST: Vid ett giltigt drag: cField uppdaterat enligt draget (x,y) i riktingen direkt. Enligt regler för att röra pjäser i Solitarie.
+	POST: Vid ett giltigt drag: cField uppdaterat enligt draget (x,y) i riktingen direc. Enligt regler för att röra pjäser i Solitarie.
 		  Vid ett oglitigt drag blir cField oförändrad.
 	EXAMPLE:
 	*)
@@ -236,7 +244,7 @@ struct
 	POST: points+1
 	EXAMPLE:
 	*)
-	fun addPoints(points) = points+1
+	fun addPoint(points) = points+1
 	(*-------------------------------------------------------------------------------------------------------------*)
 	(*removePoint(points)
 	TYPE: int -> int
