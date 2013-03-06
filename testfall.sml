@@ -145,21 +145,49 @@ S.field(#[
 (S.undo(S.undo(S.move(S.move(undoField,3,4,S.SOUTH),3,2,S.NORTH),3,4,S.SOUTH),3,3,S.NORTH) = undoField,"S.undo(S.move(undoField,2,4,S.WEST))");
 
 (*SaveFile*)
-(S.saveHighScoreList("test.score",[("Max",1,2),("Johan",3,4),("Erik",5,6),("Jonas",7,8),("Adam",9,10)]));
+(S.saveHighScoreList("test.score","save",[("Max",1,2),("Johan",3,4),("Erik",5,6),("Jonas",7,8),("Adam",9,10)]));
 
 (*loadFile*)
 (S.loadHighScoreList("test.score") = [("Max",1,2),("Johan",3,4),("Erik",5,6),("Jonas",7,8),("Adam",9,10)],"loadHighScoreList");
 
 (*sortHighScoreList*)
-(S.sortHighScoreList("points",[("Johan",3,4),("Max",1,2),("Jonas",7,8),("Erik",5,6),("Adam",9,10)]) = [("Adam",9,10),("Jonas",7,8),("Erik",5,6),("Johan",3,4),("Max",1,2)],"sortHighScoreList");
-
+(S.sortHighScoreList("points",[("Johan",3,4),("Max",1,2),("Jonas",7,8),("Erik",5,6),("Adam",9,10)]) = [("Adam",9,10),("Jonas",7,8),("Erik",5,6),("Johan",3,4),("Max",1,2)],"sortHighScoreList(points)");
+(S.sortHighScoreList("time",[("Johan",3,4),("Max",1,2),("Jonas",0,11),("Erik",5,6),("Adam",9,10)]) = [("Jonas",0,11),("Max",1,2),("Johan",3,4),("Erik",5,6),("Adam",9,10)],"sortHighScoreList(time)");
 (*addPoints(points)*)
 (S.addPoints(1) = 2,"addPoints");
 (*removePoint(points)*)
 (S.removePoint(2) = 1,"removePoint");
 (*getTime()*)
-(S.getTime() = Time.now(),"getTime()");
+(S.getTime() = Time.toReal(Time.now()),"getTime()");
 (*getTimeDiff(xTime,yTime)*)
 (S.getTimeDiff(S.getTime(),S.getTime()) = 0,"getTimeDiff");
+(*addToHighScroeList*)
+S.addToHighScroeList("test.score",("Olle",1,2));
+(S.loadHighScoreList("test.score") = [("Max",1,2),("Johan",3,4),("Erik",5,6),("Jonas",7,8),("Adam",9,10),("Olle",1,2)],"loadHighScoreList");
+(*getSpecificField*)
+(S.getSpecificField("cross") =
+			S.field(#[#[S.OUT,S.OUT,S.EXISTS,S.EXISTS,S.EXISTS,S.OUT,S.OUT],
+			#[S.OUT,S.OUT,S.EXISTS,S.EXISTS,S.EXISTS,S.OUT,S.OUT],
+			#[S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS],
+			#[S.EXISTS,S.EXISTS,S.EXISTS,S.VOID,S.EXISTS,S.EXISTS,S.EXISTS],
+			#[S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS],
+			#[S.OUT,S.OUT,S.EXISTS,S.EXISTS,S.EXISTS,S.OUT,S.OUT],
+			#[S.OUT,S.OUT,S.EXISTS,S.EXISTS,S.EXISTS,S.OUT,S.OUT]]),"S.getSpecificField(cross)");
+(S.getSpecificField("circle") = 
+			S.field(#[#[S.OUT,S.OUT,S.EXISTS,S.EXISTS,S.EXISTS,S.OUT,S.OUT],
+			#[S.OUT,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.OUT],
+			#[S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS],
+			#[S.EXISTS,S.EXISTS,S.EXISTS,S.VOID,S.EXISTS,S.EXISTS,S.EXISTS],
+			#[S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS],
+			#[S.OUT,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.OUT,S.OUT],
+			#[S.OUT,S.OUT,S.EXISTS,S.EXISTS,S.EXISTS,S.OUT,S.OUT]]),"getSpecificField(circle)");
+(S.getSpecificField("hexagon") =			
+			S.field(#[#[S.OUT,S.OUT,S.OUT,S.EXISTS,S.OUT,S.OUT,S.OUT],
+			#[S.OUT,S.OUT,S.EXISTS,S.EXISTS,S.EXISTS,S.OUT,S.OUT],
+			#[S.OUT,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.OUT],
+			#[S.EXISTS,S.EXISTS,S.EXISTS,S.VOID,S.EXISTS,S.EXISTS,S.EXISTS],
+			#[S.OUT,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.EXISTS,S.OUT],
+			#[S.OUT,S.OUT,S.EXISTS,S.EXISTS,S.EXISTS,S.OUT,S.OUT],
+			#[S.OUT,S.OUT,S.OUT,S.EXISTS,S.OUT,S.OUT,S.OUT]]),"S.getSpecificField(hexagon)");
 
 

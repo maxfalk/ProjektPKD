@@ -18,7 +18,7 @@ struct
 	datatype Fieldstate = EXISTS | VOID | OUT 
 	(* 
 	REPRESENTAION CONVENTION:field representerar en 2-dimensionell plan där varje postition i planen representeras av ett Fieldstate. 
-	REPRESENTAION INVARIANT: 
+	REPRESENTAION INVARIANT: Varje subvektor dvs varje vektor i den första vektorn måste vara av samma längd.
 	*)
 	datatype Field = field of Fieldstate vector vector 
 	(* 
@@ -179,11 +179,10 @@ struct
 	*)
 	fun move(cField,x,y,direc) =
 		let
-			val OOB = outOfBounds(cField,x,y)
 			val PeiceToMove = checkForPiece(cField,x,y,EXISTS)	
 			val rulespassed = rules(cField,x,y,direc) 
 		in
-			if PeiceToMove andalso OOB andalso rulespassed then
+			if PeiceToMove andalso rulespassed then
 				movedirection(cField,x,y,direc,VOID,VOID,EXISTS)
 			else
 				cField
@@ -248,28 +247,28 @@ struct
 	fun removePoint(points) = points-1
 	(*-------------------------------------------------------------------------------------------------------------*)
 	(*getTime()
-	TYPE: unit -> time
+	TYPE: unit -> real
 	PRE: none.
 	POST: Tiden då funktionen kördes.
 	EXAMPLE
 	*)
-	fun getTime() = Time.now()
+	fun getTime() = Time.toReal(Time.now())
 	(*-------------------------------------------------------------------------------------------------------------*)
 	(*getTimeDiff(xTime,yTime)
-	TYPE: time * time -> int
+	TYPE: real * real -> int
 	PRE: 0 < xTime-yTime
 	POST: xTime-yTime i sekunder.
 	EXAMPLE:
 	*)
-	fun getTimeDiff(xTime,yTime) = Time.toSeconds(Time.-(xTime,yTime))
+	fun getTimeDiff(xTime,yTime) = Time.toSeconds(Time.-(Time.fromReal(xTime),Time.fromReal(yTime)))
 	(*-------------------------------------------------------------------------------------------------------------*)
-	(*saveHighScoreList(path,vList)
-	TYPE: string * (string * int * int) list -> unit
+	(*saveHighScoreList(path,saveType,vList)
+	TYPE: string * string *(string * int * int) list -> unit
 	PRE:none.
-	SIDE-EFFECT: Sparar listan vList till filen med sden relativa sökvägen path.
+	SIDE-EFFECT: Sparar listan vList till filen med den relativa sökvägen path. Appendar till filen om saveType= "append" annars spara över den existerande filen.
 	EXAMPLE:
 	*)
-	fun saveHighScoreList(path,vList) =
+	fun saveHighScoreList(path,saveType,vList) =
 		let
 			(*saveToFile(oStream,value)
 			TYPE: outstream * string -> unit
@@ -310,7 +309,9 @@ struct
 				| convertToListFormat((name,timeSec,points)::last) = convertToStringFormat(name,timeSec,points)::convertToListFormat(last)
 			(*-------------------------------------------------------------------------------------------------------------*)		
 			val formatedlist = convertToListFormat(vList)
-			val oStream = TextIO.openOut(path)
+			val oStream = case saveType of
+							"append" => TextIO.openAppend(path)
+							|	_	=>	TextIO.openOut(path)
 
 		in
 			(saveListToFile(oStream,formatedlist);
@@ -415,26 +416,26 @@ struct
 		fun sortHighScoreList(sortBy,[]) = []
 			| sortHighScoreList(sortBy,(name,timeSec,points)::rest) =
 				let
-					(*partition(p,sortBy,fList)
-					TYPE: int * string * ('a * int *int) list -> ('a * int *int) list * ('a * int *int) list
+					(*partition(p,f,sortBy,fList)
+					TYPE: int * function * string * ('a * int *int) list -> ('a * int *int) list * ('a * int *int) list
 					PRE: sortBy = "time" eller sortBy = "points".
 					POST: 	fList=[(name,timeSec,points),...]
-							(less,more). less innehåller alla elemet i fList där timeSec < p om sortBy = "time". 
+							(less,more). less innehåller alla element i fList där p > timeSec om sortBy = "time". 
 							Om sortBy = "points" innehåller less alla elemant i fList där points < p.
-							more innehåller alla som är större än p med samma beroende på sortBy.
+							more innehåller alla andra element.
 					EXAMPLE:
 					*)
 					(*VARIANT: |fList|*)
-					fun partition(p,_,[]) = ([],[])
-						| partition(p,sortBy,(name,timeSec,points)::rest) = 
+					fun partition(p,_,_,[]) = ([],[])
+						| partition(p,f,sortBy,(name,timeSec,points)::rest) = 
 							let
 								val sortByValue = (case sortBy of
 												"time" => timeSec
 												| "points" => points)
 												
-								val (less, more) = partition(p,sortBy,rest)
+								val (less, more) = partition(p,f,sortBy,rest)
 							in
-								if p < sortByValue then 
+								if f(p,sortByValue) then 
 									(less, (name,timeSec,points)::more)
 								else
 									((name,timeSec,points)::less, more)
@@ -442,26 +443,29 @@ struct
 								
 					val pivot = (case sortBy of
 										"time" => timeSec
-										| "points" => points)		
+										| "points" => points)
+					val f = (case sortBy of
+										"time" => op >
+										| "points" => op <)	
 							
-					val (less, more) = partition(pivot,sortBy,rest)
+					val (less, more) = partition(pivot,f,sortBy,rest)
 
 				in
 					sortHighScoreList(sortBy,more)@((name,timeSec,points):: (sortHighScoreList(sortBy,less)))
 				
 				end
-		(*addToHighScroeList((name,timeSec,points),fList)
-		TYPE: ('a * int * int) * ('a * int * int) list -> ('a * int * int) list
+		(*addToHighScroeList(path,(name,timeSec,points))
+		TYPE: (string * int * int), string -> unit
 		PRE:none.
-		POST: (name,timeSec,points)::fList
+		SIDE-EFFECT: Lägger till (name,timeSec,points) i filen med den relativa sökvägen path.
 		EXAMPLE:
 		
 		*)
-		fun addToHighScroeList((name,timeSec,points),fList) = (name,timeSec,points)::fList
+		fun addToHighScroeList(path,(name,timeSec,points)) = saveHighScoreList(path,"append",[(name,timeSec,points)])
 		(*getSpecificField(fType)
 		TYPE: string -> Field
 		PRE: fType = "cross","circle" eller "hexagon"
-		POST: Ett Field av en förbestämd storlek och form.
+		POST: Ett Field av en förbestämd storlek och form. cross ger ett field i formen av ett kors, rumb i formen av en rumb och hexagon i fromen av en hexagon.
 		EXAMPLE:
 		*)
 		fun getSpecificField(fType) =
@@ -474,14 +478,14 @@ struct
 												#[EXISTS,EXISTS,EXISTS,EXISTS,EXISTS,EXISTS,EXISTS],
 												#[OUT,OUT,EXISTS,EXISTS,EXISTS,OUT,OUT],
 												#[OUT,OUT,EXISTS,EXISTS,EXISTS,OUT,OUT]]
-								| "circle" => #[#[OUT,OUT,EXISTS,EXISTS,EXISTS,OUT,OUT],
+								| "hexagon" => #[#[OUT,OUT,EXISTS,EXISTS,EXISTS,OUT,OUT],
 												#[OUT,EXISTS,EXISTS,EXISTS,EXISTS,EXISTS,OUT],
 												#[EXISTS,EXISTS,EXISTS,EXISTS,EXISTS,EXISTS,EXISTS],
 												#[EXISTS,EXISTS,EXISTS,VOID,EXISTS,EXISTS,EXISTS],
 												#[EXISTS,EXISTS,EXISTS,EXISTS,EXISTS,EXISTS,EXISTS],
-												#[OUT,EXISTS,EXISTS,EXISTS,EXISTS,OUT,OUT],
+												#[OUT,EXISTS,EXISTS,EXISTS,EXISTS,EXISTS,OUT],
 												#[OUT,OUT,EXISTS,EXISTS,EXISTS,OUT,OUT]]
-								| "hexagon" => #[#[OUT,OUT,OUT,EXISTS,OUT,OUT,OUT],
+								| "rumb" => #[#[OUT,OUT,OUT,EXISTS,OUT,OUT,OUT],
 												#[OUT,OUT,EXISTS,EXISTS,EXISTS,OUT,OUT],
 												#[OUT,EXISTS,EXISTS,EXISTS,EXISTS,EXISTS,OUT],
 												#[EXISTS,EXISTS,EXISTS,VOID,EXISTS,EXISTS,EXISTS],

@@ -1,9 +1,9 @@
 (*
-
 load "Mosmlcgi";
-*)
 
+*)
 open Mosmlcgi;
+
 exception HTML of string;
 
 
@@ -66,4 +66,6 @@ fun makeInput(mtype, name, id, value) =
 	"value = \"" ^ value ^ "\" " ^
 	(if id="" then " " else ("id = \"" ^ id ^ "\" ")) ^
 		  ">\n";
+		  
+
 	
