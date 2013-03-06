@@ -21,7 +21,7 @@ struct
 	datatype Fieldstate = EXISTS | VOID | OUT 
 	(* 
 	REPRESENTAION CONVENTION:field representerar en 2-dimensionell plan där varje postition i planen representeras av ett Fieldstate. 
-	REPRESENTAION INVARIANT: Varje subvektor dvs varje vektor i den första vektorn måste vara av samma längd.
+	REPRESENTAION INVARIANT: Varje subvektor dvs varje vektor i den innre vektorn måste vara av samma längd.
 	*)
 	datatype Field = field of Fieldstate vector vector 
 	(* 
@@ -34,7 +34,7 @@ struct
 	(*sub(cField,x,y)
 	TYPE: Field * int * int -> Fieldstate
 	PRE: 0 <= x < längden av cField i x-led, 0 <= y < längden av cFeild i y-led
-	POST: Värdet av elementet i cField med posistion (x,y), y är platen i första vektorn och x i den andra.
+	POST: Värdet av elementet i cField med posistion (x,y), y är platen i första vektorn och x i den andra(subvektorn).
 	EXAMPLE:
 	*)
 	fun sub(field(plan),x,y) = Vector.sub(Vector.sub(plan,y),x)
@@ -55,7 +55,11 @@ struct
 			POST: vec uppdaterat med value på position x
 			EXAMPLE:
 			*)
-			fun update(vec,x,value) = Vector.tabulate(Vector.length(vec), (fn y => if y = x then value else Vector.sub(vec,y)) )
+			fun update(vec,x,value) = Vector.tabulate(Vector.length(vec), (fn y => 
+																					if y = x then 
+																						value 
+																					else 
+																						Vector.sub(vec,y)) )
 		in
 			field(update(vec,y,update(Vector.sub(vec,y),x,value)))
 		end
@@ -94,7 +98,7 @@ struct
 	(* outOfBounds(plan,x,y)
 	TYPE: Field * int * int -> bool
 	PRE:none
-	POST: Ger true om x och y är innanför plann annars false.
+	POST: Ger true om x och y är innanför plan annars false.
 	EXAMPLE:
 	*)
 	fun outOfBounds(field(plan),x,y) = 
@@ -110,7 +114,7 @@ struct
 	(*checkForPiece(cField,x,y,value)
 	TYPE: Field * int * int * Fieldstate -> bool
 	PRE:none.
-	POST: true om element (x,y) i plan har värdet value och x,y är innom planen. Annars false.
+	POST: true om element (x,y) i cField har värdet value och x,y är innom cField. Annars false.
 	EXAMPLE:
 	*)
 	fun checkForPiece(cField,x,y,value) = 
@@ -166,10 +170,10 @@ struct
 	(*rules(cField,x,y,direct)
 	TYPE: Field * int * int * Direction -> bool
 	PRE: none.
-	POST:  	direct = NORTH så måste (x,y+2) vara en lidigt plats (VOID) och (x,y+1) vara en "ej liedigplats" (EXISTS),
-			direct = SOUTH så måste (x,y-2) vara en lidigt plats (VOID) och (x,y-1) vara en "ej liedigplats" (EXISTS),
-			direct = EAST så måste (x+2,y) vara en lidigt plats (VOID) och (x+1,y) vara en "ej liedigplats" (EXISTS),
-			direct = WEST så måste (x-2,y) vara en lidigt plats (VOID) och (x-1,y) vara en "ej liedigplats" (EXISTS),
+	POST:  	direct = NORTH så måste (x,y+2) vara en ledigt plats (VOID) och (x,y+1) vara en "ej ledigplats" (EXISTS),
+			direct = SOUTH så måste (x,y-2) vara en ledigt plats (VOID) och (x,y-1) vara en "ej ledigplats" (EXISTS),
+			direct = EAST så måste (x+2,y) vara en ledigt plats (VOID) och (x+1,y) vara en "ej ledigplats" (EXISTS),
+			direct = WEST så måste (x-2,y) vara en ledigt plats (VOID) och (x-1,y) vara en "ej ledigplats" (EXISTS),
 			alla dessa fall ger true, annars ger den false
 	EXAMPLE:
 	*)
@@ -273,7 +277,7 @@ struct
 	(*saveHighScoreList(path,saveType,vList)
 	TYPE: string * string *(string * int * int) list -> unit
 	PRE:none.
-	SIDE-EFFECT: Sparar listan vList till filen med den relativa sökvägen path. Appendar till filen om saveType= "append" annars spara över den existerande filen.
+	SIDE-EFFECT: Sparar listan vList till filen med den relativa sökvägen path. Appendar till filen om saveType= "append" annars spara (över en existerande om det finns) den filen.
 	EXAMPLE:
 	*)
 	fun saveHighScoreList(path,saveType,vList) =
@@ -367,7 +371,7 @@ struct
 					(*breakLine(line,A)
 					TYPE: string * string-> string list
 					PRE:none
-					POST: Delar upp line till en lista där varje element består av alla karaktärer fram till ",", coh slutningen ";" som slut. 
+					POST: Delar upp line till en lista där varje element består av alla karaktärer fram till ",", och slutningen ";" som slut. 
 					EXAMPLE:
 					*)
 					(*VARIANT: |line|*)
@@ -407,7 +411,7 @@ struct
 			val iStream = TextIO.openIn(path)
 			val fList = loadList(iStream)
 			val output = convertListToFormat(fList)
-			(*Stäng fil strömmen om det blir något fel*)
+			(*Stäng filströmmen om det blir något fel*)
 					handle 	_ => (TextIO.closeIn(iStream);raise BadFile)
 			val _ = TextIO.closeIn(iStream)
 
@@ -417,7 +421,8 @@ struct
 		(*sortHighScoreList(sortBy,fList)
 		TYPE: string * ('a * int *int) list -> ('a * int *int) list
 		PRE:sortBy = time eller sortBy = "points"
-		POST: listan fList sorterad i icke ökande ordning. Enligt fList=[(name,timeSec,points),...] timeSec om sortBy = time eller points om sortBy = "points"
+		POST:fList=[(name,timeSec,points),...]. listan fList sorterad i icke ökande ordning om sortBy = "points" efter points.
+			om sortBy = "time" blir listan fList sorterad i icke minskande ordning enligt timeSec.
 		EXAMPLE:
 		*)
 		(*VARIANT: |fList|*)
