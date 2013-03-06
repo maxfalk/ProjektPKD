@@ -2,7 +2,7 @@ use "S.sml";
 
 (* bestMove(b)
    TYPE: Field -> (int * int * Direction) option
-   PRE: 
+   PRE: NONE
    POST: SOME(The first non-losing move), NONE if no non-losing move was found.
 *)
 fun bestMove (board) = 
@@ -83,7 +83,7 @@ fun bestMove (board) =
            PRE: NONE
            POST: The first non-losing move.
          *)
-        (* VARIANT: *)
+        (* VARIANT: (The number of game pieces left on the board)-1 *)
         fun bestMove' (board,[]) = []
           | bestMove' (board,m::ms) = 
             let
